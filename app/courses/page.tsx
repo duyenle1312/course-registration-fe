@@ -11,7 +11,7 @@ export default function Home() {
         </div>
       </div>
       <div className="flex min-h-screen flex-col items-center justify-center p-32">
-        <CourseList from="registered"/>
+        <CourseList/>
       </div>
     </>
   );

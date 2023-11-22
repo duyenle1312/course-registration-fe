@@ -1,8 +1,5 @@
 import { Metadata } from "next";
 import Image from "next/image";
-
-import { Separator } from "@/components/ui/separator";
-import { SidebarNav } from "./components/sidebar-nav";
 import { MainNav } from "@/components/main-nav";
 import { UserNav } from "@/components/user-nav";
 
