@@ -159,11 +159,8 @@ export const columns: ColumnDef<Courses>[] = [
   },
 ];
 
-interface Props {
-  from: string;
-}
 
-export function CourseList(props: Props) {
+export function CourseList() {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
