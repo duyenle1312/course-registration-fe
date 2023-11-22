@@ -17,18 +17,18 @@ export function MainNav({
       >
         All Courses
       </Link>
-      {/* <Link
+      <Link
         href="/courses"
         className="text-sm font-medium text-gray-800 transition-colors hover:text-primary"
       >
         Registered Course
-      </Link> */}
-      <Link
+      </Link>
+      {/* <Link
         href="/profile"
         className="text-sm font-medium text-gray-800 transition-colors hover:text-primary"
       >
         Settings
-      </Link>
+      </Link> */}
     </nav>
   )
 }
