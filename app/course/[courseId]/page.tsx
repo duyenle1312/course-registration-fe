@@ -1,4 +1,3 @@
-import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,12 +7,43 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import Link from "next/link";
 
-type CardProps = React.ComponentProps<typeof Card>;
+async function getCourseDetails() {
+  const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
+  console.log(API_url);
+  try {
+    const res = await fetch(`${API_url}/courses/id/${12}`);
+    console.log(res);
+    const data = await res.json();
+    console.log(data);
+  } catch (err) {
+    console.log(err);
+  }
+}
 
-export default function CourseDetails(props: any) {
+async function enrollACourse() {
+  const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
+  console.log(API_url);
+  try {
+    const res = await fetch(`${API_url}/enroll/${12}`);
+    console.log(res);
+    const data = await res.json();
+    console.log(data);
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+export default async function CourseDetails(props: any) {
   const courseId = props?.params?.courseId;
   console.log(courseId);
+  // const data = await getCourseDetails();
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-24">
@@ -44,12 +74,12 @@ export default function CourseDetails(props: any) {
               </div>
               <div className="my-3">
                 <p className="text-sm  leading-none my-3">
-                <span className="font-medium">Enrollments: </span> 12/30
+                  <span className="font-medium">Enrollments: </span> 12/30
                 </p>
               </div>
               <div className="my-3">
                 <p className="text-sm font-medium leading-none my-3">
-                  Description
+                  Description:
                 </p>
                 <p className="text-sm text-black">
                   In this writing intensive seminar, students develop and write
@@ -87,8 +117,35 @@ export default function CourseDetails(props: any) {
           </div>
         </CardContent>
         <CardFooter className="flex space-x-3">
-          <Button className="px-6 bg-blue-800 text-white">Add Course</Button>
-          {/* <Button className="px-6">Back to All Courses</Button> */}
+          <Button className="px-6 bg-green-700 text-white">Add Course</Button>
+          {/* Admin Only */}
+          <Link href={`/edit-course/${courseId}`}>
+            <Button className="px-6 bg-blue-700 hover:bg-blue-600">
+              Edit Courses
+            </Button>
+          </Link>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button className="px-6 bg-red-600 hover:bg-red-700">
+                Delete Course
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-68">
+              <div className="grid gap-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium leading-none">
+                    This action cannot be recovered
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    Do you want to delete this course?
+                  </p>
+                </div>
+                <div className="w-full">
+                  <Button className="w-full bg-red-600 hover:bg-red-700">Delete</Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </CardFooter>
       </Card>
     </div>

@@ -12,6 +12,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 
+async function logOut() {
+  const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
+  console.log(API_url);
+  try {
+    const res = await fetch(`${API_url}/logout`);
+    console.log(res)
+    const data = await res.json();
+    console.log(data);
+  } catch (err) {
+    console.log(err);
+  }
+}
 export function UserNav() {
   return (
     <DropdownMenu>

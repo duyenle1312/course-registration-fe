@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-   
+    
       <section>
         <div className="flex p-5 w-full fixed bg-white bg-opacity-30 backdrop-blur-lg rounded drop-shadow-md">
           <MainNav className="" />
@@ -21,10 +21,10 @@ export default function RootLayout({
             <UserNav />
           </div>
         </div>
-        <div className="flex min-h-screen flex-col items-center justify-center ">
+        <div className="flex min-h-screen flex-col items-center justify-center lg:p-32 md:p-20 p-5">
           {children}
         </div>
       </section>
-
+ 
   );
 }

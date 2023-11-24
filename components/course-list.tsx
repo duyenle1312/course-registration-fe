@@ -64,7 +64,7 @@ const data: Courses[] = [
     instructor: "S. Mitreva",
     code: "COS 3100",
     name: "Programming in Python",
-    time: "TTh 1:30-3:30pm",
+    time: "TF 1:30-3:30pm",
   },
   {
     id: "bhqecj4p",
@@ -78,89 +78,17 @@ const data: Courses[] = [
 export type Courses = {
   id: string;
   instructor: string;
-  code: string; 
+  code: string;
   name: string;
   time: string;
 };
 
-export const columns: ColumnDef<Courses>[] = [
-  {
-    accessorKey: "code",
-    header: ({ column }) => {
-      return (
-        <div className="text-left -ml-4">
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            ID
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
-      );
-    },
-    cell: ({ row }) => <div className="capitalize">{row.getValue("code")}</div>,
-  },
-  {
-    accessorKey: "name",
-    header: ({ column }) => {
-      return (
-        <div className="text-left -ml-4">
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Name
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
-      );
-    },
-    cell: ({ row }) => <div className="">{row.getValue("name")}</div>,
-  },
-  {
-    accessorKey: "instructor",
-    header: () => <div className="text-left">Instructor</div>,
-    cell: ({ row }) => <div className="">{row.getValue("instructor")}</div>,
-  },
-  {
-    accessorKey: "time",
-    header: () => <div className="text-left">Time</div>,
-    cell: ({ row }) => <div className="">{row.getValue("time")}</div>,
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const course = row.original;
+interface Props {
+  role: string;
+  functionality: string;
+}
 
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(course.code)}
-            >
-              Copy course ID
-            </DropdownMenuItem>
-            <DropdownMenuItem><Link href="/course/123">View details</Link></DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Add Course</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-];
-
-
-export function CourseList() {
+export function CourseList(props: Props) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -168,6 +96,107 @@ export function CourseList() {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+
+  const columns: ColumnDef<Courses>[] = [
+    {
+      accessorKey: "code",
+      header: ({ column }) => {
+        return (
+          <div className="text-left -ml-4">
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              <span className="text-black font-base">Code</span>
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
+      cell: ({ row }) => (
+        <div className="capitalize text-sm">{row.getValue("code")}</div>
+      ),
+    },
+    {
+      accessorKey: "name",
+      header: ({ column }) => {
+        return (
+          <div className="text-left -ml-4">
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              <span className="text-black font-base">Name</span>
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
+      cell: ({ row }) => <div className="text-sm">{row.getValue("name")}</div>,
+    },
+    {
+      accessorKey: "instructor",
+      header: () => <div className="text-left text-black font-base">Instructor</div>,
+      cell: ({ row }) => <div className="text-sm">{row.getValue("instructor")}</div>,
+    },
+    {
+      accessorKey: "time",
+      header: () => <div className="text-left text-black font-base">Time</div>,
+      cell: ({ row }) => <div className="text-sm">{row.getValue("time")}</div>,
+    },
+    // {
+    //   accessorKey: "id",
+    //   enableHiding: false,
+    //   header: () => <div className=""></div>,
+    //   cell: ({ row }) => (
+    //     <Button variant="link" className="text-sm font-normal -mx-32">
+    //       <Link href={`/course/${row.getValue("id")}`}>View</Link>
+    //     </Button>
+    //   ),
+    // },
+    {
+      id: "actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const course = row.original;
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => navigator.clipboard.writeText(course.code)}
+              >
+                Copy course ID
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link href="/course/123">View details</Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  // check functionality to add or drop course then render a toast notification
+                  console.log(props.functionality);
+                }}
+              >
+                {props.functionality}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
 
   const table = useReactTable({
     data,
@@ -209,7 +238,9 @@ export function CourseList() {
         />
         <Input
           placeholder="Find instructor..."
-          value={(table.getColumn("instructor")?.getFilterValue() as string) ?? ""}
+          value={
+            (table.getColumn("instructor")?.getFilterValue() as string) ?? ""
+          }
           onChange={(event) =>
             table.getColumn("instructor")?.setFilterValue(event.target.value)
           }
@@ -218,7 +249,7 @@ export function CourseList() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
-              Columns <ChevronDown className="ml-2 h-4 w-4" />
+              Filter <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -235,7 +266,7 @@ export function CourseList() {
                       column.toggleVisibility(!!value)
                     }
                   >
-                    {column.id}
+                    {column.id != "id" ? column.id : "Details"}
                   </DropdownMenuCheckboxItem>
                 );
               })}
