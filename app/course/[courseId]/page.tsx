@@ -50,7 +50,7 @@ export default async function CourseDetails(props: any) {
       <Card className="border-none shadow-none">
         <CardHeader>
           <CardTitle>Introduction to Poetry</CardTitle>
-          <CardDescription>ID: ENG2006</CardDescription>
+          <CardDescription>Course ID: ENG2006</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <div>

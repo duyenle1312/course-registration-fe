@@ -109,7 +109,7 @@ export function CourseList(props: Props) {
                 column.toggleSorting(column.getIsSorted() === "asc")
               }
             >
-              <span className="text-black font-base">Code</span>
+              <span className="text-black font-base">ID</span>
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           </div>
@@ -148,16 +148,16 @@ export function CourseList(props: Props) {
       header: () => <div className="text-left text-black font-base">Time</div>,
       cell: ({ row }) => <div className="text-sm">{row.getValue("time")}</div>,
     },
-    // {
-    //   accessorKey: "id",
-    //   enableHiding: false,
-    //   header: () => <div className=""></div>,
-    //   cell: ({ row }) => (
-    //     <Button variant="link" className="text-sm font-normal -mx-32">
-    //       <Link href={`/course/${row.getValue("id")}`}>View</Link>
-    //     </Button>
-    //   ),
-    // },
+    {
+      accessorKey: "id",
+      enableHiding: false,
+      header: () => <div className=""></div>,
+      cell: ({ row }) => (
+        <Button variant="link" className="text-sm font-normal -mx-32">
+          <Link href={`/course/${row.getValue("id")}`}>View Details</Link>
+        </Button>
+      ),
+    },
     {
       id: "actions",
       enableHiding: false,
@@ -177,11 +177,11 @@ export function CourseList(props: Props) {
               <DropdownMenuItem
                 onClick={() => navigator.clipboard.writeText(course.code)}
               >
-                Copy course ID
+                Copy Course ID
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              {/* <DropdownMenuItem>
                 <Link href="/course/123">View details</Link>
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => {
@@ -266,7 +266,7 @@ export function CourseList(props: Props) {
                       column.toggleVisibility(!!value)
                     }
                   >
-                    {column.id != "id" ? column.id : "Details"}
+                    {column.id != "code" ? column.id : "ID"}
                   </DropdownMenuCheckboxItem>
                 );
               })}
