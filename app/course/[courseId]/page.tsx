@@ -1,3 +1,4 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,6 +14,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 async function getCourseDetails() {
   const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -40,10 +42,31 @@ async function enrollACourse() {
   }
 }
 
-export default async function CourseDetails(props: any) {
+export default function CourseDetails(props: any) {
   const courseId = props?.params?.courseId;
   console.log(courseId);
   // const data = await getCourseDetails();
+
+  const [user, setUser] = useState({
+    id: 0,
+    username: "",
+    password: "",
+    email: "",
+    phone: "",
+    verified: false,
+    suspended: false,
+    forcenewpw: false,
+    role: "",
+  });
+
+  useEffect(() => {
+    const current_user_str = localStorage.getItem("current_user"); 
+    if (current_user_str) {
+      const current_user = JSON.parse(current_user_str);
+      if (current_user) setUser(current_user);
+      // console.log(current_user)
+    }
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-24">
@@ -117,35 +140,40 @@ export default async function CourseDetails(props: any) {
           </div>
         </CardContent>
         <CardFooter className="flex space-x-3">
-          <Button className="px-6 bg-green-700 text-white">Add Course</Button>
-          {/* Admin Only */}
-          <Link href={`/edit-course/${courseId}`}>
-            <Button className="px-6 bg-blue-700 hover:bg-blue-600">
-              Edit Courses
-            </Button>
-          </Link>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button className="px-6 bg-red-600 hover:bg-red-700">
-                Delete Course
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-68">
-              <div className="grid gap-4">
-                <div className="space-y-2">
-                  <h4 className="font-medium leading-none">
-                    This action cannot be recovered
-                  </h4>
-                  <p className="text-sm text-muted-foreground">
-                    Do you want to delete this course?
-                  </p>
-                </div>
-                <div className="w-full">
-                  <Button className="w-full bg-red-600 hover:bg-red-700">Delete</Button>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+        {user?.role === "student" && (<Button className="px-6 bg-green-700 text-white">Add Course</Button>)}
+          {user?.role === "admin" && (
+            <>
+              <Link href={`/edit-course/${courseId}`}>
+                <Button className="px-6 bg-blue-700 hover:bg-blue-600">
+                  Edit Courses
+                </Button>
+              </Link>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button className="px-6 bg-red-600 hover:bg-red-700">
+                    Delete Course
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-68">
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <h4 className="font-medium leading-none">
+                        This action cannot be recovered
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Do you want to delete this course?
+                      </p>
+                    </div>
+                    <div className="w-full">
+                      <Button className="w-full bg-red-600 hover:bg-red-700">
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </>
+          )}
         </CardFooter>
       </Card>
     </div>

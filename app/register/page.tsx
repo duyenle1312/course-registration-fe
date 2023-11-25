@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import Link from "next/link";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -24,35 +24,42 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "@/components/ui/use-toast";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const FormSchema = z.object({
+  first_name: z.string().min(2, {
+    message: "First name must be at least 2 characters.",
+  }),
+  last_name: z.string().min(2, {
+    message: "Last name must be at least 2 characters.",
+  }),
+  password: z.string().min(2, {
+    message: "Password must be at least 2 characters.",
+  }),
   email: z
     .string()
     .email()
     .endsWith("@aubg.edu", { message: "Only @aubg.edu email allowed" }),
-  password: z.string().min(2, {
-    message: "Password must be at least 2 characters.",
-  }),
 });
 
-export default function LogIn() {
-  const router = useRouter()
-  
+export default function Register() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      email: "",
+      first_name: "",
+      last_name: "",
       password: "",
+      email: "",
     },
   });
 
   async function onSubmit(info: z.infer<typeof FormSchema>) {
     const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
     try {
-      const res = await fetch(`${API_url}/login`, {
+      const res = await fetch(`${API_url}/register`, {
         method: "GET",
         headers: {
+          username: `${info.first_name} ${info.last_name}`,
           email: info.email,
           password: info.password,
         },
@@ -61,15 +68,14 @@ export default function LogIn() {
       // console.log(data);
       // console.log(res.status);
       if (res.status === 200) {
-        localStorage.setItem("current_user", JSON.stringify(data));
-        form.reset();
+        form.reset()
         toast({
-          description: "Log In Successfully",
+          title: data.message,
+          description: "You can now log in.",
         });
-        router.replace('/')
       } else {
         toast({
-          description: data.error,
+          description: data.error
         });
       }
     } catch (err) {
@@ -84,12 +90,43 @@ export default function LogIn() {
         className="flex min-h-screen flex-col items-center justify-center p-32"
       >
         <Card>
-          <CardHeader className="flex text-center space-y-1">
-            <CardTitle className="text-2xl px-5 py-3">
-              Course Management System
-            </CardTitle>
+          <CardHeader className="flex text-center space-y-1 px-3 my-2">
+            <CardTitle className="text-2xl">Register New Account</CardTitle>
+            <CardDescription>Course Management System</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
+            <div className="grid md:grid-cols-4 gap-x-3">
+              <div className="grid col-span-2">
+                <FormField
+                  control={form.control}
+                  name="first_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Tony" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid col-span-2">
+                <FormField
+                  control={form.control}
+                  name="last_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Le" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
             <div className="grid gap-2">
               <FormField
                 control={form.control}
@@ -122,14 +159,11 @@ export default function LogIn() {
             </div>
           </CardContent>
           <CardFooter>
-            <Button className="w-full">Sign In</Button>
+            <Button className="w-full">Submit</Button>
           </CardFooter>
-          <Link
-            href="/register"
-            className="relative flex justify-center text-xs"
-          >
+          <Link href="/login" className="relative flex justify-center text-xs">
             <span className="bg-background px-2 -mb-1 font-medium text-gray-500 hover:underline">
-              Register Here
+              Log In Here
             </span>
           </Link>
         </Card>

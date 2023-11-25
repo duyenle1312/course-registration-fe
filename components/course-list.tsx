@@ -36,6 +36,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 const data: Courses[] = [
   {
@@ -89,6 +90,26 @@ interface Props {
 }
 
 export function CourseList(props: Props) {
+  const [user, setUser] = useState({
+    id: 0,
+    username: "",
+    password: "",
+    email: "",
+    phone: "",
+    verified: false,
+    suspended: false,
+    forcenewpw: false,
+    role: "",
+  });
+
+  useEffect(() => {
+    const current_user_str = localStorage.getItem("current_user");
+    if (current_user_str) {
+      const current_user = JSON.parse(current_user_str);
+      if (current_user) setUser(current_user);
+    }
+  }, []);
+
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -140,8 +161,12 @@ export function CourseList(props: Props) {
     },
     {
       accessorKey: "instructor",
-      header: () => <div className="text-left text-black font-base">Instructor</div>,
-      cell: ({ row }) => <div className="text-sm">{row.getValue("instructor")}</div>,
+      header: () => (
+        <div className="text-left text-black font-base">Instructor</div>
+      ),
+      cell: ({ row }) => (
+        <div className="text-sm">{row.getValue("instructor")}</div>
+      ),
     },
     {
       accessorKey: "time",
@@ -153,7 +178,7 @@ export function CourseList(props: Props) {
       enableHiding: false,
       header: () => <div className=""></div>,
       cell: ({ row }) => (
-        <Button variant="link" className="text-sm font-normal -mx-32">
+        <Button variant="link" className="text-sm font-normal lg:-mx-32">
           <Link href={`/course/${row.getValue("id")}`}>View Details</Link>
         </Button>
       ),
@@ -179,18 +204,19 @@ export function CourseList(props: Props) {
               >
                 Copy Course ID
               </DropdownMenuItem>
-              {/* <DropdownMenuItem>
-                <Link href="/course/123">View details</Link>
-              </DropdownMenuItem> */}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => {
-                  // check functionality to add or drop course then render a toast notification
-                  console.log(props.functionality);
-                }}
-              >
-                {props.functionality}
-              </DropdownMenuItem>
+              {user?.id !== 0 && user?.role !== "admin" && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => {
+                      // check functionality to add or drop course then render a toast notification
+                      console.log(props.functionality);
+                    }}
+                  >
+                    {props.functionality}
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         );

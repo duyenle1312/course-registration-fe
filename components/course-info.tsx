@@ -1,6 +1,4 @@
 "use client";
-
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,7 +8,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -33,6 +30,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "@/components/ui/use-toast";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 const FormSchema = z.object({
   id: z.string().min(3, {
@@ -70,6 +69,25 @@ interface Props {
 }
 
 export function CourseInfo(props: Props) {
+  const [user, setUser] = useState({
+    id: 0,
+    username: "",
+    password: "",
+    email: "",
+    phone: "",
+    verified: false,
+    suspended: false,
+    forcenewpw: false,
+    role: "",
+  });
+  useEffect(() => {
+    const current_user_str = localStorage.getItem("current_user");
+    if (current_user_str) {
+      const current_user = JSON.parse(current_user_str);
+      if (current_user) setUser(current_user);
+    }
+  }, []);
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -95,6 +113,9 @@ export function CourseInfo(props: Props) {
       ),
     });
   }
+
+  if (user?.role !== "admin") return <div>Only Admin can view this page</div>
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -106,8 +127,8 @@ export function CourseInfo(props: Props) {
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-6">
-            <div className="grid grid-cols-5 gap-4">
-              <div className="grid col-span-1 gap-2">
+            <div className="grid md:grid-cols-5 gap-4">
+              <div className="grid md:col-span-1 gap-2">
                 <FormField
                   control={form.control}
                   name="id"
@@ -122,7 +143,7 @@ export function CourseInfo(props: Props) {
                   )}
                 />
               </div>
-              <div className="grid col-span-4 gap-2">
+              <div className="grid md:col-span-4 gap-2">
                 <FormField
                   control={form.control}
                   name="title"
@@ -177,7 +198,7 @@ export function CourseInfo(props: Props) {
                 )}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <FormField
                   control={form.control}
@@ -209,8 +230,8 @@ export function CourseInfo(props: Props) {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
+            <div className="grid md:grid-cols-4 gap-4">
+              <div className="grid md:col-span-2 gap-2">
                 <FormField
                   control={form.control}
                   name="time"
@@ -225,7 +246,7 @@ export function CourseInfo(props: Props) {
                   )}
                 />
               </div>
-              <div className="grid gap-2">
+              <div className="grid md:col-span-2 gap-2">
                 <FormField
                   control={form.control}
                   name="credits"
