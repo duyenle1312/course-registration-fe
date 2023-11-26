@@ -190,6 +190,13 @@ export function UserList() {
               >
                 Assign as Teacher
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  assignRole(user?.id, "student");
+                }}
+              >
+                Assign as Student
+              </DropdownMenuItem>
               <DropdownMenuItem>Update</DropdownMenuItem>
               <DropdownMenuItem>Delete</DropdownMenuItem>
             </DropdownMenuContent>

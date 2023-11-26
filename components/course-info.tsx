@@ -49,20 +49,27 @@ const FormSchema = z.object({
     message: "Time must be at least 2 characters.",
   }),
   credit: z.string(),
-  notes: z.string().min(3, {
-    message: "Notes must be at least 3 characters.",
-  }),
+  notes: z.string(),
 });
 
 interface Props {
   title: string;
-  // role: string;
+  courseId: string;
   functionality: string;
 }
 
 export function CourseInfo(props: Props) {
   const { user } = useAuth();
   const [teachers, setTeachers] = useState<any[]>([]);
+  const [courseInfo, setCourseInfo] = useState({
+    id: "", // could be number, check backend return data
+    title: "",
+    description: "",
+    teacher_id: "",
+    time: "",
+    credit: "3",
+    notes: "",
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -74,43 +81,53 @@ export function CourseInfo(props: Props) {
       .then((data) => {
         setTeachers(data);
         setLoading(false);
-        console.log(data);
+        // console.log(data);
       });
-  }, []);
+    // Get course info
+    if (props.functionality === "edit") {
+      setLoading(true);
+      fetch(`${API_url}/courses/${props.courseId}`, {
+        next: { revalidate: 1 }, // Revalidate every second
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setCourseInfo(data);
+          setLoading(false);
+          console.log(data);
+        });
+    }
+  }, [props]);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
-    defaultValues: {
-      id: "",
-      title: "",
-      description: "",
-      teacher_id: "",
-      time: "",
-      credit: "3",
-      notes: "",
-    },
+    defaultValues: courseInfo,
   });
 
   async function onSubmit(info: z.infer<typeof FormSchema>) {
-    const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
+    // Change API based on functionality => edit/create
+    const API_url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/courses${
+      props.functionality === "edit" ? `/${props.courseId}` : ``
+    }`;
+    console.log(API_url);
+    const payload = {
+      login_email: user.email,
+      login_password: user.password,
+      course_nr: info.id,
+      name: info.title,
+      description: `${info.description}. ${info.notes}.`,
+      id: info.teacher_id.toString(),
+      timeslots: info.time,
+      cr_cost: info.credit.toString(),
+    };
+    console.log(payload);
     try {
-      // Create a new course
-      const res = await fetch(`${API_url}/courses`, {
-        method: "POST",
-        headers: {
-          login_email: user.email,
-          login_password: user.password,
-          course_nr: info.id,
-          name: info.title,
-          description: `${info.description}. ${info.notes}.`,
-          id: info.teacher_id.toString(),
-          timeslots: info.time,
-          cr_cost: info.credit.toString(),
-        },
+      const res = await fetch(`${API_url}`, {
+        method: props.functionality === "edit" ? `PATCH` : `POST`,
+        headers: payload,
       });
       const data = await res.json();
-      // console.log(data);
-      // console.log(res.status);
+      console.log(data);
+      console.log(res.status);
       if (res.status === 200) {
         form.reset();
         toast({
@@ -193,6 +210,8 @@ export function CourseInfo(props: Props) {
                             <SelectValue placeholder="Select" />
                           </SelectTrigger>
                           <SelectContent>
+                            {/* Delete this later */}
+                            <SelectItem value="100">Select</SelectItem>
                             {teachers.map((teacher) => (
                               <SelectItem
                                 key={teacher?.id}

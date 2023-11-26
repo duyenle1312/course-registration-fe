@@ -59,7 +59,7 @@ export default function Register() {
 
     try {
       const res = await fetch(`${API_url}/admin/register`, {
-        method: "GET",
+        method: "POST",
         headers: {
           username: `${info.first_name} ${info.last_name}`,
           email: info.email,

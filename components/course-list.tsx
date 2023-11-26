@@ -37,8 +37,9 @@ import {
 } from "@/components/ui/table";
 import Link from "next/link";
 import useAuth from "@/lib/useAuth";
+import { useEffect, useState } from "react";
 
-const data: Courses[] = [
+const dummy_data: Courses[] = [
   {
     id: "m5gr84i9",
     instructor: "V. Levchev",
@@ -91,6 +92,21 @@ interface Props {
 
 export function CourseList(props: Props) {
   const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [data, setCourses] = useState([]);
+
+  useEffect(() => {
+    const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
+    fetch(`${API_url}/courses`, {
+      next: { revalidate: 1 }, // Revalidate every second
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setCourses(data);
+        setLoading(false);
+        console.log(data);
+      });
+  }, []);
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
