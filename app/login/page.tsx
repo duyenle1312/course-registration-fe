@@ -51,17 +51,18 @@ export default function LogIn() {
     const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
     try {
       const res = await fetch(`${API_url}/login`, {
-        method: "GET",
+        method: "POST",
         headers: {
-          email: info.email,
-          password: info.password,
+          login_email: info.email,
+          login_password: info.password,
         },
       });
       const data = await res.json();
       // console.log(data);
       // console.log(res.status);
       if (res.status === 200) {
-        localStorage.setItem("current_user", JSON.stringify(data));
+        const loggedInUser = {...data, password: info.password}
+        localStorage.setItem("current_user", JSON.stringify(loggedInUser));
         form.reset();
         toast({
           description: "Log In Successfully",

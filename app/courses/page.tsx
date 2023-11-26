@@ -1,8 +1,7 @@
 "use client";
 import { CourseList } from "@/components/course-list";
-import { MainNav } from "@/components/main-nav";
-import { UserNav } from "@/components/user-nav";
-import { useEffect, useState } from "react";
+import useAuth from "@/lib/useAuth";
+
 async function getRegisteredCourses() {
   const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
   console.log(API_url);
@@ -17,24 +16,7 @@ async function getRegisteredCourses() {
 }
 
 export default function RegisteredCourses() {
-  const [user, setUser] = useState({
-    id: 0,
-    username: "",
-    password: "",
-    email: "",
-    phone: "",
-    verified: false,
-    suspended: false,
-    forcenewpw: false,
-    role: "",
-  });
-  useEffect(() => {
-    const current_user_str = localStorage.getItem("current_user");
-    if (current_user_str) {
-      const current_user = JSON.parse(current_user_str);
-      if (current_user) setUser(current_user);
-    }
-  }, []);
+  const { user } = useAuth();
 
   // const data = await getRegisteredCourses();
 

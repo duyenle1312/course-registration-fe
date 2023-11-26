@@ -30,8 +30,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "@/components/ui/use-toast";
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import useAuth from "@/lib/useAuth";
+import { useEffect, useState } from "react";
 
 const FormSchema = z.object({
   id: z.string().min(3, {
@@ -43,20 +44,11 @@ const FormSchema = z.object({
   description: z.string().min(3, {
     message: "Description must be at least 3 characters.",
   }),
-  instructor: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
+  teacher_id: z.string(),
   time: z.string().min(2, {
     message: "Time must be at least 2 characters.",
   }),
-  email: z
-    .string()
-    .email()
-    .endsWith("@aubg.edu", { message: "Only @aubg.edu email allowed" }),
-  credits: z.number({
-    required_error: "Credits is required",
-    invalid_type_error: "Must be a number",
-  }),
+  credit: z.string(),
   notes: z.string().min(3, {
     message: "Notes must be at least 3 characters.",
   }),
@@ -69,23 +61,21 @@ interface Props {
 }
 
 export function CourseInfo(props: Props) {
-  const [user, setUser] = useState({
-    id: 0,
-    username: "",
-    password: "",
-    email: "",
-    phone: "",
-    verified: false,
-    suspended: false,
-    forcenewpw: false,
-    role: "",
-  });
+  const { user } = useAuth();
+  const [teachers, setTeachers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    const current_user_str = localStorage.getItem("current_user");
-    if (current_user_str) {
-      const current_user = JSON.parse(current_user_str);
-      if (current_user) setUser(current_user);
-    }
+    const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
+    fetch(`${API_url}/teachers`, {
+      next: { revalidate: 1 }, // Revalidate every second
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setTeachers(data);
+        setLoading(false);
+        console.log(data);
+      });
   }, []);
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -94,27 +84,51 @@ export function CourseInfo(props: Props) {
       id: "",
       title: "",
       description: "",
-      instructor: "",
-      email: "",
+      teacher_id: "",
       time: "",
-      credits: 3,
+      credit: "3",
       notes: "",
     },
   });
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
-    console.log("bs");
-    toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-white p-4">
-          <code className="text-black">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    });
+  async function onSubmit(info: z.infer<typeof FormSchema>) {
+    const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
+    try {
+      // Create a new course
+      const res = await fetch(`${API_url}/courses`, {
+        method: "POST",
+        headers: {
+          login_email: user.email,
+          login_password: user.password,
+          course_nr: info.id,
+          name: info.title,
+          description: `${info.description}. ${info.notes}.`,
+          id: info.teacher_id.toString(),
+          timeslots: info.time,
+          cr_cost: info.credit.toString(),
+        },
+      });
+      const data = await res.json();
+      // console.log(data);
+      // console.log(res.status);
+      if (res.status === 200) {
+        form.reset();
+        toast({
+          description: data.message,
+        });
+      } else {
+        toast({
+          description: data.error,
+        });
+      }
+    } catch (err) {
+      console.log(err);
+    }
   }
 
-  if (user?.role !== "admin") return <div>Only Admin can view this page</div>
+  if (user?.role !== "admin" && loading === false) {
+    return <div>Only Admin can view this page</div>;
+  }
 
   return (
     <Form {...form}>
@@ -162,6 +176,40 @@ export function CourseInfo(props: Props) {
                 />
               </div>
             </div>
+            <div className="flex gap-x-5">
+              <div className="w-full">
+                <FormField
+                  control={form.control}
+                  name="teacher_id"
+                  render={({ field }) => (
+                    <FormItem className="">
+                      <FormLabel className="">Instructor</FormLabel>
+                      <FormControl className="w-full">
+                        <Select onValueChange={field.onChange} defaultValue="0">
+                          <SelectTrigger
+                            id="teacher_id"
+                            className="w-full line-clamp-1 truncate"
+                          >
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {teachers.map((teacher) => (
+                              <SelectItem
+                                key={teacher?.id}
+                                value={teacher?.id.toString()}
+                              >
+                                {teacher?.username} ({teacher?.email})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
             <div className="grid gap-2">
               <FormField
                 control={form.control}
@@ -198,40 +246,8 @@ export function CourseInfo(props: Props) {
                 )}
               />
             </div>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <FormField
-                  control={form.control}
-                  name="instructor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Instructor</FormLabel>
-                      <FormControl>
-                        <Input placeholder="David Wilson" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid gap-2">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Instructor&apos;s Email</FormLabel>
-                      <FormControl>
-                        <Input placeholder="david@aubg.edu" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-            <div className="grid md:grid-cols-4 gap-4">
-              <div className="grid md:col-span-2 gap-2">
+            <div className="grid grid-cols-4 space-x-5">
+              <div className="grid col-span-2">
                 <FormField
                   control={form.control}
                   name="time"
@@ -246,20 +262,20 @@ export function CourseInfo(props: Props) {
                   )}
                 />
               </div>
-              <div className="grid md:col-span-2 gap-2">
+              <div className="grid col-span-2">
                 <FormField
                   control={form.control}
-                  name="credits"
+                  name="credit"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Credits</FormLabel>
                       <FormControl>
-                        <Select defaultValue="3">
+                        <Select onValueChange={field.onChange} defaultValue="3">
                           <SelectTrigger
                             id="credit"
-                            className="line-clamp-1 w-[160px] truncate"
+                            className="line-clamp-1 w-full truncate"
                           >
-                            <SelectValue placeholder="Select level" />
+                            <SelectValue placeholder="Select Credits" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="1">1</SelectItem>

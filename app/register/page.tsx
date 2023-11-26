@@ -57,7 +57,7 @@ export default function Register() {
     const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
     try {
       const res = await fetch(`${API_url}/register`, {
-        method: "GET",
+        method: "POST",
         headers: {
           username: `${info.first_name} ${info.last_name}`,
           email: info.email,

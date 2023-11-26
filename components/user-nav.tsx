@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,28 +14,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import useAuth from "@/lib/useAuth";
 
 export function UserNav() {
   const router = useRouter()
-  const [user, setUser] = useState({
-    id: 0,
-    username: "",
-    password: "",
-    email: "",
-    phone: "",
-    verified: false,
-    suspended: false,
-    forcenewpw: false,
-    role: "",
-  });
-
-  useEffect(() => {
-    const current_user_str = localStorage.getItem("current_user");
-    if (current_user_str) {
-      const current_user = JSON.parse(current_user_str);
-      if (current_user) setUser(current_user);
-    }
-  }, []);
+  const { user } = useAuth();
 
   return (
     <div>

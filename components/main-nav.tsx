@@ -3,32 +3,14 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import useAuth from "@/lib/useAuth";
 
 export function MainNav({
   className,
   ...props
 }: React.HTMLAttributes<HTMLElement>) {
   const pathname = usePathname();
-  const [user, setUser] = useState({
-    id: 0,
-    username: "",
-    password: "",
-    email: "",
-    phone: "",
-    verified: false,
-    suspended: false,
-    forcenewpw: false,
-    role: "",
-  });
-
-  useEffect(() => {
-    const current_user_str = localStorage.getItem("current_user"); 
-    if (current_user_str) {
-      const current_user = JSON.parse(current_user_str);
-      if (current_user) setUser(current_user);
-    }
-  }, []);
+  const { user } = useAuth();
 
   return (
     <nav
@@ -54,14 +36,24 @@ export function MainNav({
         </Link>
       )}
       {user?.role === "admin" && (
-        <Link
-          href="/create-course"
-          className={`text-sm text-gray-800 transition-colors hover:text-primary ${
-            pathname == "/create-course" ? "font-semibold" : ""
-          }`}
-        >
-          Create New Course
-        </Link>
+        <>
+          <Link
+            href="/users"
+            className={`text-sm text-gray-800 transition-colors hover:text-primary ${
+              pathname == "/users" ? "font-semibold" : ""
+            }`}
+          >
+            All Users
+          </Link>
+          <Link
+            href="/create-course"
+            className={`text-sm text-gray-800 transition-colors hover:text-primary ${
+              pathname == "/create-course" ? "font-semibold" : ""
+            }`}
+          >
+            Create New Course
+          </Link>
+        </>
       )}
     </nav>
   );

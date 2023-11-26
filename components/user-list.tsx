@@ -16,14 +16,12 @@ import {
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -37,60 +35,67 @@ import {
 } from "@/components/ui/table";
 import Link from "next/link";
 import useAuth from "@/lib/useAuth";
+import { useState, useEffect } from "react";
+import { toast } from "@/components/ui/use-toast";
+import { useRouter } from "next/navigation";
 
-const data: Courses[] = [
-  {
-    id: "m5gr84i9",
-    instructor: "V. Levchev",
-    code: "ENG 1006",
-    name: "Introduction to Poetry",
-    time: "TTh 1:30-3:30pm",
-  },
-  {
-    id: "3u1reuv4",
-    instructor: "N. Raychev",
-    code: "COS 3015",
-    name: "Software Engineering",
-    time: "TTh 1:30-3:30pm",
-  },
-  {
-    id: "derv1ws0",
-    instructor: "S. Venela",
-    code: "JMC 3120",
-    name: "Media Law and Ethics",
-    time: "TTh 1:30-3:30pm",
-  },
-  {
-    id: "5kma53ae",
-    instructor: "S. Mitreva",
-    code: "COS 3100",
-    name: "Programming in Python",
-    time: "TF 1:30-3:30pm",
-  },
-  {
-    id: "bhqecj4p",
-    instructor: "A. Dean",
-    code: "FAR 1001",
-    name: "Music Theory",
-    time: "TTh 1:30-3:30pm",
-  },
-];
-
-export type Courses = {
-  id: string;
-  instructor: string;
-  code: string;
-  name: string;
-  time: string;
+export type Users = {
+  id: number;
+  username: string;
+  password: string;
+  email: string;
+  phone: string;
+  verified: boolean;
+  suspended: boolean;
+  forcenewpw: boolean;
+  role: string;
 };
 
-interface Props {
-  role: string;
-  functionality: string;
-}
-
-export function CourseList(props: Props) {
+export function UserList() {
   const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [data, setUsers] = useState([]);
+
+  useEffect(() => {
+    const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
+    fetch(`${API_url}/users`, {
+      next: { revalidate: 1 }, // Revalidate every second
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setUsers(data);
+        setLoading(false);
+        // console.log(data);
+      });
+  }, []);
+
+  async function assignRole(target_id: number, role: string) {
+    const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
+    try {
+      const res = await fetch(`${API_url}/admin/users/${target_id}`, {
+        method: "PATCH",
+        headers: {
+          login_email: user?.email || "",
+          login_password: user?.password || "",
+          id: target_id.toString(),
+          role: role,
+        },
+      });
+      const data = await res.json();
+      if (res.status === 200) {
+        toast({
+          description: "Update Role Successfully",
+        });
+        window.location.reload(); // reload to fetch new data again
+      } else {
+        toast({
+          description: data.error,
+        });
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -100,9 +105,9 @@ export function CourseList(props: Props) {
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  const columns: ColumnDef<Courses>[] = [
+  const columns: ColumnDef<Users>[] = [
     {
-      accessorKey: "code",
+      accessorKey: "id",
       header: ({ column }) => {
         return (
           <div className="text-left -ml-4">
@@ -119,11 +124,11 @@ export function CourseList(props: Props) {
         );
       },
       cell: ({ row }) => (
-        <div className="capitalize text-sm">{row.getValue("code")}</div>
+        <div className="capitalize text-sm">{row.getValue("id")}</div>
       ),
     },
     {
-      accessorKey: "name",
+      accessorKey: "username",
       header: ({ column }) => {
         return (
           <div className="text-left -ml-4">
@@ -139,37 +144,27 @@ export function CourseList(props: Props) {
           </div>
         );
       },
-      cell: ({ row }) => <div className="text-sm">{row.getValue("name")}</div>,
-    },
-    {
-      accessorKey: "instructor",
-      header: () => (
-        <div className="text-left text-black font-base">Instructor</div>
-      ),
       cell: ({ row }) => (
-        <div className="text-sm">{row.getValue("instructor")}</div>
+        <div className="text-sm">{row.getValue("username")}</div>
       ),
     },
     {
-      accessorKey: "time",
-      header: () => <div className="text-left text-black font-base">Time</div>,
-      cell: ({ row }) => <div className="text-sm">{row.getValue("time")}</div>,
+      accessorKey: "email",
+      header: () => <div className="text-left text-black font-base">Email</div>,
+      cell: ({ row }) => <div className="text-sm">{row.getValue("email")}</div>,
     },
     {
-      accessorKey: "id",
-      enableHiding: false,
-      header: () => <div className=""></div>,
+      accessorKey: "role",
+      header: () => <div className="text-left text-black font-base">Role</div>,
       cell: ({ row }) => (
-        <Button variant="link" className="text-sm font-normal lg:-mx-32">
-          <Link href={`/course/${row.getValue("id")}`}>View Details</Link>
-        </Button>
+        <div className="text-sm capitalize">{row.getValue("role")}</div>
       ),
     },
     {
       id: "actions",
       enableHiding: false,
       cell: ({ row }) => {
-        const course = row.original;
+        const user = row.original;
 
         return (
           <DropdownMenu>
@@ -182,23 +177,21 @@ export function CourseList(props: Props) {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(course.code)}
+                onClick={() => {
+                  assignRole(user?.id, "admin");
+                }}
               >
-                Copy Course ID
+                Assign as Admin
               </DropdownMenuItem>
-              {user?.id !== 0 && user?.role !== "admin" && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => {
-                      // check functionality to add or drop course then render a toast notification
-                      console.log(props.functionality);
-                    }}
-                  >
-                    {props.functionality}
-                  </DropdownMenuItem>
-                </>
-              )}
+              <DropdownMenuItem
+                onClick={() => {
+                  assignRole(user?.id, "teacher");
+                }}
+              >
+                Assign as Teacher
+              </DropdownMenuItem>
+              <DropdownMenuItem>Update</DropdownMenuItem>
+              <DropdownMenuItem>Delete</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -225,32 +218,27 @@ export function CourseList(props: Props) {
     },
   });
 
+  if (user?.role !== "admin" && loading === false)
+    return <div>Only Admin can view this page</div>;
+
   return (
     <div className="w-full">
       <div className="flex items-center py-4">
         <Input
-          placeholder="Filter department..."
-          value={(table.getColumn("code")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("code")?.setFilterValue(event.target.value)
-          }
-          className="max-w-xs mr-5"
-        />
-        <Input
-          placeholder="Find course name..."
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("name")?.setFilterValue(event.target.value)
-          }
-          className="max-w-xs mr-5"
-        />
-        <Input
-          placeholder="Find instructor..."
+          placeholder="Find name..."
           value={
-            (table.getColumn("instructor")?.getFilterValue() as string) ?? ""
+            (table.getColumn("username")?.getFilterValue() as string) ?? ""
           }
           onChange={(event) =>
-            table.getColumn("instructor")?.setFilterValue(event.target.value)
+            table.getColumn("username")?.setFilterValue(event.target.value)
+          }
+          className="max-w-xs mr-5"
+        />
+        <Input
+          placeholder="Find email..."
+          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
+          onChange={(event) =>
+            table.getColumn("email")?.setFilterValue(event.target.value)
           }
           className="max-w-xs"
         />
@@ -274,7 +262,7 @@ export function CourseList(props: Props) {
                       column.toggleVisibility(!!value)
                     }
                   >
-                    {column.id != "code" ? column.id : "ID"}
+                    {column.id != "username" ? column.id : "Name"}
                   </DropdownMenuCheckboxItem>
                 );
               })}
@@ -331,30 +319,6 @@ export function CourseList(props: Props) {
           </TableBody>
         </Table>
       </div>
-      {/* <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
-      </div> */}
     </div>
   );
 }

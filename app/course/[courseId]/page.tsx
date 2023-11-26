@@ -14,7 +14,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import useAuth from '@/lib/useAuth';
 
 async function getCourseDetails() {
   const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -44,29 +44,10 @@ async function enrollACourse() {
 
 export default function CourseDetails(props: any) {
   const courseId = props?.params?.courseId;
-  console.log(courseId);
+  // console.log(courseId);
+  const { user, setUser } = useAuth();
+  
   // const data = await getCourseDetails();
-
-  const [user, setUser] = useState({
-    id: 0,
-    username: "",
-    password: "",
-    email: "",
-    phone: "",
-    verified: false,
-    suspended: false,
-    forcenewpw: false,
-    role: "",
-  });
-
-  useEffect(() => {
-    const current_user_str = localStorage.getItem("current_user"); 
-    if (current_user_str) {
-      const current_user = JSON.parse(current_user_str);
-      if (current_user) setUser(current_user);
-      // console.log(current_user)
-    }
-  }, []);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-24">
