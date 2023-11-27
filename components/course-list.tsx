@@ -93,18 +93,43 @@ interface Props {
 export function CourseList(props: Props) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [data, setCourses] = useState([]);
+  const [data, setCourses] = useState<any[]>([]);
 
   useEffect(() => {
     const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
+    let teachers_data: any[] = [];
+
+    // Get all teachers
+    fetch(`${API_url}/teachers`, {
+      next: { revalidate: 1 }, // Revalidate every second
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        teachers_data = data;
+      });
+    
+    // Get all courses
     fetch(`${API_url}/courses`, {
       next: { revalidate: 1 }, // Revalidate every second
     })
       .then((res) => res.json())
       .then((data) => {
-        setCourses(data);
+        let courses: any[] = [];
+        data.forEach((x: any, i: any) => {
+          // Get teacher name from teacher_id provided by the course object
+          const teacher = teachers_data.filter(
+            (teacher) => teacher["id"] === x.teacher_id
+          );
+          courses.push({
+            id: x.id || "",
+            instructor: teacher[0]?.username,
+            code: x.course_nr || "",
+            name: x.course || "",
+            time: x.timeslots || "",
+          });
+        });
+        setCourses(courses);
         setLoading(false);
-        console.log(data);
       });
   }, []);
 
@@ -176,7 +201,7 @@ export function CourseList(props: Props) {
       enableHiding: false,
       header: () => <div className=""></div>,
       cell: ({ row }) => (
-        <Button variant="link" className="text-sm font-normal lg:-mx-32">
+        <Button variant="link" className="text-sm font-normal ">
           <Link href={`/course/${row.getValue("id")}`}>View Details</Link>
         </Button>
       ),
