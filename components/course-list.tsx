@@ -58,7 +58,7 @@ export function CourseList(props: Props) {
   const [loading, setLoading] = useState(true);
   const [data, setCourses] = useState<any[]>([]);
 
-  async function enrollCourse(courseId: string, course_name:string) {
+  async function enrollCourse(courseId: string, course_name: string) {
     const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
     try {
       const res = await fetch(`${API_url}/enroll/${courseId}`, {
@@ -77,7 +77,7 @@ export function CourseList(props: Props) {
         });
       } else {
         toast({
-          description: data.error
+          description: data.error,
         });
       }
     } catch (err) {
@@ -174,8 +174,16 @@ export function CourseList(props: Props) {
     },
     {
       accessorKey: "instructor",
-      header: () => (
-        <div className="text-left text-black font-base">Instructor</div>
+      header: ({ column }) => (
+        <div className="text-left -ml-4">
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            <span className="text-black font-base">Instructor</span>
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
       ),
       cell: ({ row }) => (
         <div className="text-sm">{row.getValue("instructor")}</div>
@@ -183,7 +191,17 @@ export function CourseList(props: Props) {
     },
     {
       accessorKey: "time",
-      header: () => <div className="text-left text-black font-base">Time</div>,
+      header: ({ column }) => (
+        <div className="text-left -ml-4">
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            <span className="text-black font-base">Time</span>
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      ),
       cell: ({ row }) => <div className="text-sm">{row.getValue("time")}</div>,
     },
     {
