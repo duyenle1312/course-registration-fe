@@ -38,44 +38,7 @@ import {
 import Link from "next/link";
 import useAuth from "@/lib/useAuth";
 import { useEffect, useState } from "react";
-
-const dummy_data: Courses[] = [
-  {
-    id: "m5gr84i9",
-    instructor: "V. Levchev",
-    code: "ENG 1006",
-    name: "Introduction to Poetry",
-    time: "TTh 1:30-3:30pm",
-  },
-  {
-    id: "3u1reuv4",
-    instructor: "N. Raychev",
-    code: "COS 3015",
-    name: "Software Engineering",
-    time: "TTh 1:30-3:30pm",
-  },
-  {
-    id: "derv1ws0",
-    instructor: "S. Venela",
-    code: "JMC 3120",
-    name: "Media Law and Ethics",
-    time: "TTh 1:30-3:30pm",
-  },
-  {
-    id: "5kma53ae",
-    instructor: "S. Mitreva",
-    code: "COS 3100",
-    name: "Programming in Python",
-    time: "TF 1:30-3:30pm",
-  },
-  {
-    id: "bhqecj4p",
-    instructor: "A. Dean",
-    code: "FAR 1001",
-    name: "Music Theory",
-    time: "TTh 1:30-3:30pm",
-  },
-];
+import { toast } from "./ui/use-toast";
 
 export type Courses = {
   id: string;
@@ -95,6 +58,33 @@ export function CourseList(props: Props) {
   const [loading, setLoading] = useState(true);
   const [data, setCourses] = useState<any[]>([]);
 
+  async function enrollCourse(courseId: string, course_name:string) {
+    const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
+    try {
+      const res = await fetch(`${API_url}/enroll/${courseId}`, {
+        method: "POST",
+        headers: {
+          login_email: user.email,
+          login_password: user.password,
+        },
+      });
+      const data = await res.json();
+      // console.log(data);
+      // console.log(res.status);
+      if (res.status === 200) {
+        toast({
+          description: `Successfully enroll in ${course_name}`,
+        });
+      } else {
+        toast({
+          description: data.error
+        });
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   useEffect(() => {
     const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
     let teachers_data: any[] = [];
@@ -106,30 +96,30 @@ export function CourseList(props: Props) {
       .then((res) => res.json())
       .then((data) => {
         teachers_data = data;
-      });
-    
-    // Get all courses
-    fetch(`${API_url}/courses`, {
-      next: { revalidate: 1 }, // Revalidate every second
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        let courses: any[] = [];
-        data.forEach((x: any, i: any) => {
-          // Get teacher name from teacher_id provided by the course object
-          const teacher = teachers_data.filter(
-            (teacher) => teacher["id"] === x.teacher_id
-          );
-          courses.push({
-            id: x.id || "",
-            instructor: teacher[0]?.username,
-            code: x.course_nr || "",
-            name: x.course || "",
-            time: x.timeslots || "",
+
+        // Get all courses
+        fetch(`${API_url}/courses`, {
+          next: { revalidate: 1 }, // Revalidate every second
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            let courses: any[] = [];
+            data.forEach((x: any, i: any) => {
+              // Get teacher name from teacher_id provided by the course object
+              const teacher = teachers_data.filter(
+                (teacher) => teacher["id"] === x.teacher_id
+              );
+              courses.push({
+                id: x.id || "",
+                instructor: teacher[0]?.username,
+                code: x.course_nr || "",
+                name: x.course || "",
+                time: x.timeslots || "",
+              });
+            });
+            setCourses(courses);
+            setLoading(false);
           });
-        });
-        setCourses(courses);
-        setLoading(false);
       });
   }, []);
 
@@ -232,8 +222,7 @@ export function CourseList(props: Props) {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => {
-                      // check functionality to add or drop course then render a toast notification
-                      console.log(props.functionality);
+                      enrollCourse(course.id, course.name);
                     }}
                   >
                     {props.functionality}

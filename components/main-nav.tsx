@@ -25,7 +25,7 @@ export function MainNav({
       >
         AUBG Courses
       </Link>
-      {user?.id !== 0 && user?.role !== "admin" && (
+      {user?.role === "student" && (
         <Link
           href="/courses"
           className={`text-sm text-gray-800 transition-colors hover:text-primary ${
@@ -36,24 +36,24 @@ export function MainNav({
         </Link>
       )}
       {user?.role === "admin" && (
-        <>
-          <Link
-            href="/users"
-            className={`text-sm text-gray-800 transition-colors hover:text-primary ${
-              pathname == "/users" ? "font-semibold" : ""
-            }`}
-          >
-            All Users
-          </Link>
-          <Link
-            href="/create-course"
-            className={`text-sm text-gray-800 transition-colors hover:text-primary ${
-              pathname == "/create-course" ? "font-semibold" : ""
-            }`}
-          >
-            Create New Course
-          </Link>
-        </>
+        <Link
+          href="/users"
+          className={`text-sm text-gray-800 transition-colors hover:text-primary ${
+            pathname == "/users" ? "font-semibold" : ""
+          }`}
+        >
+          All Users
+        </Link>
+      )}
+      {(user?.role === "admin" || user?.role === "teacher") && (
+        <Link
+          href="/create-course"
+          className={`text-sm text-gray-800 transition-colors hover:text-primary ${
+            pathname == "/create-course" ? "font-semibold" : ""
+          }`}
+        >
+          Create New Course
+        </Link>
       )}
     </nav>
   );

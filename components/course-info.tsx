@@ -33,9 +33,11 @@ import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import useAuth from "@/lib/useAuth";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const FormSchema = z.object({
-  id: z.string().min(3, {
+  id: z.number(),
+  code: z.string().min(3, {
     message: "Course ID must be at least 3 characters.",
   }),
   title: z.string().min(3, {
@@ -49,8 +51,19 @@ const FormSchema = z.object({
     message: "Time must be at least 2 characters.",
   }),
   credit: z.string(),
-  notes: z.string(),
 });
+
+interface CourseDetails {
+  id: number;
+  title: string;
+  code: string;
+  teacher_id: string;
+  // instructor: "",
+  // instructor_email: "",
+  description: string;
+  credit: string;
+  time: string;
+}
 
 interface Props {
   title: string;
@@ -60,47 +73,65 @@ interface Props {
 
 export function CourseInfo(props: Props) {
   const { user } = useAuth();
+  const router = useRouter();
   const [teachers, setTeachers] = useState<any[]>([]);
-  const [courseInfo, setCourseInfo] = useState({
-    id: "", // could be number, check backend return data
-    title: "",
-    description: "",
-    teacher_id: "",
-    time: "",
-    credit: "3",
-    notes: "",
-  });
   const [loading, setLoading] = useState(true);
-
+  const [courseDetails, setCourseDetails] = useState<CourseDetails>({
+    id: 0,
+    title: "",
+    code: "",
+    teacher_id: "0",
+    // instructor: "",
+    // instructor_email: "",
+    description: "",
+    credit: "3",
+    time: "",
+  });
   useEffect(() => {
     const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
+    let teachers_data: any[] = [];
+
     fetch(`${API_url}/teachers`, {
       next: { revalidate: 1 }, // Revalidate every second
     })
       .then((res) => res.json())
       .then((data) => {
         setTeachers(data);
-        setLoading(false);
-        // console.log(data);
+        if (props.functionality === "create") setLoading(false);
+
+        if (props.functionality === "edit") {
+          // Get course details
+          fetch(`${API_url}/courses/${props.courseId}`, {
+            next: { revalidate: 1 }, // Revalidate every second
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              const teacher: any = teachers_data.filter(
+                (teacher) => teacher["id"] === data[0].teacher_id
+              );
+
+              const course = {
+                id: data[0].id,
+                teacher_id: data[0].teacher_id.toString(),
+                // instructor: teacher[0]["username"],
+                // instructor_email: teacher[0]["email"],
+                title: data[0].course,
+                code: data[0].course_nr,
+                description: data[0].description,
+                credit: data[0].cr_cost.toString(),
+                time: data[0].timeslots,
+              };
+              setCourseDetails(course);
+              form.reset(course); // load initial values to form
+              setLoading(false);
+            });
+        }
       });
-    // Get course info
-    if (props.functionality === "edit") {
-      setLoading(true);
-      fetch(`${API_url}/courses/${props.courseId}`, {
-        next: { revalidate: 1 }, // Revalidate every second
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          setCourseInfo(data);
-          setLoading(false);
-          console.log(data);
-        });
-    }
   }, [props]);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
-    defaultValues: courseInfo,
+    defaultValues: courseDetails,
   });
 
   async function onSubmit(info: z.infer<typeof FormSchema>) {
@@ -108,14 +139,14 @@ export function CourseInfo(props: Props) {
     const API_url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/courses${
       props.functionality === "edit" ? `/${props.courseId}` : ``
     }`;
-    console.log(API_url);
+
     const payload = {
       login_email: user.email,
       login_password: user.password,
-      course_nr: info.id,
+      course_nr: info.code,
       name: info.title,
-      description: `${info.description}. ${info.notes}.`,
-      id: info.teacher_id.toString(),
+      description: info.description,
+      id: info.teacher_id,
       timeslots: info.time,
       cr_cost: info.credit.toString(),
     };
@@ -126,13 +157,14 @@ export function CourseInfo(props: Props) {
         headers: payload,
       });
       const data = await res.json();
-      console.log(data);
-      console.log(res.status);
+      // console.log(data);
+      // console.log(res.status);
       if (res.status === 200) {
         form.reset();
         toast({
           description: data.message,
         });
+        if (props.functionality === "edit") router.push(`/course/${props.courseId}`)
       } else {
         toast({
           description: data.error,
@@ -143,8 +175,12 @@ export function CourseInfo(props: Props) {
     }
   }
 
-  if (user?.role !== "admin" && loading === false) {
-    return <div>Only Admin can view this page</div>;
+  if (loading === true) {
+    return <div>Loading...</div>;
+  }
+
+  if (user?.role === "student" && loading === false) {
+    return <div>Only Admin and Teachers can view this page</div>;
   }
 
   return (
@@ -162,7 +198,7 @@ export function CourseInfo(props: Props) {
               <div className="grid md:col-span-1 gap-2">
                 <FormField
                   control={form.control}
-                  name="id"
+                  name="code"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Course ID</FormLabel>
@@ -202,7 +238,12 @@ export function CourseInfo(props: Props) {
                     <FormItem className="">
                       <FormLabel className="">Instructor</FormLabel>
                       <FormControl className="w-full">
-                        <Select onValueChange={field.onChange} defaultValue="0">
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={
+                            courseDetails?.teacher_id.toString() || "0"
+                          }
+                        >
                           <SelectTrigger
                             id="teacher_id"
                             className="w-full line-clamp-1 truncate"
@@ -210,8 +251,6 @@ export function CourseInfo(props: Props) {
                             <SelectValue placeholder="Select" />
                           </SelectTrigger>
                           <SelectContent>
-                            {/* Delete this later */}
-                            <SelectItem value="100">Select</SelectItem>
                             {teachers.map((teacher) => (
                               <SelectItem
                                 key={teacher?.id}
@@ -238,25 +277,7 @@ export function CourseInfo(props: Props) {
                     <FormLabel>Course Description</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Course summary, expecting results, grading schemes, and course loads, etc."
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="">
-              <FormField
-                control={form.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Special Notes</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="General Education; Pre-requisites: ENG101, Junior Standing; WIC"
+                        placeholder="Course summary, expecting results, grading schemes, course loads, and pre-requisites, etc."
                         {...field}
                       />
                     </FormControl>
@@ -289,7 +310,7 @@ export function CourseInfo(props: Props) {
                     <FormItem>
                       <FormLabel>Credits</FormLabel>
                       <FormControl>
-                        <Select onValueChange={field.onChange} defaultValue="3">
+                        <Select onValueChange={field.onChange} defaultValue={courseDetails?.credit}>
                           <SelectTrigger
                             id="credit"
                             className="line-clamp-1 w-full truncate"

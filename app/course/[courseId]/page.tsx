@@ -14,66 +14,150 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import Link from "next/link";
-import useAuth from '@/lib/useAuth';
-
-async function getCourseDetails() {
-  const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
-  console.log(API_url);
-  try {
-    const res = await fetch(`${API_url}/courses/id/${12}`);
-    console.log(res);
-    const data = await res.json();
-    console.log(data);
-  } catch (err) {
-    console.log(err);
-  }
-}
-
-async function enrollACourse() {
-  const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
-  console.log(API_url);
-  try {
-    const res = await fetch(`${API_url}/enroll/${12}`);
-    console.log(res);
-    const data = await res.json();
-    console.log(data);
-  } catch (err) {
-    console.log(err);
-  }
-}
+import useAuth from "@/lib/useAuth";
+import { useEffect, useState } from "react";
+import { toast } from "@/components/ui/use-toast";
+import { useRouter } from "next/navigation";
 
 export default function CourseDetails(props: any) {
   const courseId = props?.params?.courseId;
-  // console.log(courseId);
-  const { user, setUser } = useAuth();
-  
-  // const data = await getCourseDetails();
+  const { user } = useAuth();
+  const router = useRouter()
+
+  async function enrollCourse() {
+    const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
+    try {
+      const res = await fetch(`${API_url}/enroll/${courseId}`, {
+        method: "POST",
+        headers: {
+          login_email: user.email,
+          login_password: user.password,
+        },
+      });
+      const data = await res.json();
+      console.log(data);
+      console.log(res.status);
+      if (res.status === 200) {
+        toast({
+          description: "Successfully enroll in this course",
+        });
+      } else {
+        toast({
+          description: data.error
+        });
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  async function deleteCourse() {
+    const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
+    try {
+      const res = await fetch(`${API_url}/courses/${courseId}`, {
+        method: "DELETE",
+        headers: {
+          login_email: user.email,
+          login_password: user.password,
+        },
+      });
+      const data = await res.json();
+      // console.log(data);
+      // console.log(res.status);
+      if (res.status === 200) {
+        toast({
+          title: data.message,
+        });
+        router.push("/")
+      } else {
+        toast({
+          description: data.error
+        });
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  const [loading, setLoading] = useState(true);
+  const [courseDetails, setCourseDetails] = useState({
+    id: 0,
+    name: "",
+    code: "",
+    teacher_id: 0,
+    instructor: "",
+    instructor_email: "",
+    description: "",
+    credits: 3,
+    timeslots: "",
+  });
+
+  useEffect(() => {
+    const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
+    let teachers_data: any[] = [];
+
+    // Get all teachers
+    fetch(`${API_url}/teachers`, {
+      next: { revalidate: 1 }, // Revalidate every second
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        teachers_data = data;
+        // Get course details
+        fetch(`${API_url}/courses/${courseId}`, {
+          next: { revalidate: 1 }, // Revalidate every second
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            const teacher: any = teachers_data.filter(
+              (teacher) => teacher["id"] === data[0].teacher_id
+            );
+            const course = {
+              id: data[0].id,
+              teacher_id: data[0].teacher_id,
+              instructor: teacher[0]["username"],
+              instructor_email: teacher[0]["email"],
+              name: data[0].course,
+              code: data[0].course_nr,
+              description: data[0].description,
+              credits: data[0].cr_cost,
+              timeslots: data[0].timeslots,
+            };
+            setCourseDetails(course);
+            setLoading(false);
+          });
+      });
+  }, [courseId]);
+
+  if (loading === true) return <div>Loading...</div>;
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-24">
       <Card className="border-none shadow-none">
         <CardHeader>
-          <CardTitle>Introduction to Poetry</CardTitle>
-          <CardDescription>Course ID: ENG2006</CardDescription>
+          <CardTitle>{courseDetails?.name}</CardTitle>
+          <CardDescription>Course ID: {courseDetails?.code}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <div>
             <div className="mb-4 items-start pb-4 last:mb-0 last:pb-0">
               <div className="my-3">
                 <p className="text-sm font-medium leading-none my-3">Time: </p>
-                <p className="text-sm text-black">TTh 1:30-3:30pm</p>
+                <p className="text-sm text-black">{courseDetails?.timeslots}</p>
               </div>
               <div className="my-3">
                 <p className="text-sm font-medium leading-none my-3">
                   Instructor:{" "}
                 </p>
                 <p className="text-sm text-black">
-                  Vladimir Justin (vjustin@aubg.edu)
+                  {courseDetails?.instructor} ({courseDetails?.instructor_email}
+                  )
                 </p>
               </div>
               <div className="my-3">
                 <p className="text-sm  leading-none my-3">
-                  <span className="font-medium">Credits: </span>5
+                  <span className="font-medium">Credits: </span>
+                  {courseDetails?.credits}
                 </p>
               </div>
               <div className="my-3">
@@ -86,43 +170,23 @@ export default function CourseDetails(props: any) {
                   Description:
                 </p>
                 <p className="text-sm text-black">
-                  In this writing intensive seminar, students develop and write
-                  a formal proposal for their graduate research project.
-                  Additional reading and writing assignments are included to
-                  help students better understand the scientific method,
-                  consider the creative process and develop personal strategies
-                  for writing well. By the end of the semester, students will
-                  have a complete/near complete research proposal. Successful
-                  examples from past graduate students will be used to help
-                  students identify qualities of successful proposals. Each week
-                  students explore the content of different sections of the
-                  proposal and draft them. Typically, this course is taken in
-                  the second year of graduate school and prior to the
-                  student&apos;s candidacy exam.
+                  {courseDetails?.description}
                 </p>
               </div>
-              <div className="my-3">
-                <p className="text-sm font-medium leading-none my-3">
-                  Special Note:{" "}
-                </p>
-                <p className="text-sm text-black">
-                  General Education; Pre-requisites: ENG101, Junior Standing;
-                  WIC
-                </p>
-              </div>
-
               <div className="my-3">
                 <p className="text-sm font-medium leading-none my-3">
                   Location:{" "}
                 </p>
-                <p className="text-sm text-black">MB2</p>
+                <p className="text-sm text-black">Main Building</p>
               </div>
             </div>
           </div>
         </CardContent>
         <CardFooter className="flex space-x-3">
-        {user?.role === "student" && (<Button className="px-6 bg-green-700 text-white">Add Course</Button>)}
-          {user?.role === "admin" && (
+          {user?.role === "student" && (
+            <Button onClick={enrollCourse} className="px-6 bg-green-700 text-white">Enroll</Button>
+          )}
+          {(user?.role === "admin" || courseDetails.teacher_id == user?.id) && (
             <>
               <Link href={`/edit-course/${courseId}`}>
                 <Button className="px-6 bg-blue-700 hover:bg-blue-600">
@@ -146,7 +210,10 @@ export default function CourseDetails(props: any) {
                       </p>
                     </div>
                     <div className="w-full">
-                      <Button className="w-full bg-red-600 hover:bg-red-700">
+                      <Button
+                        onClick={deleteCourse}
+                        className="w-full bg-red-600 hover:bg-red-700"
+                      >
                         Delete
                       </Button>
                     </div>
