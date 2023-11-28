@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Course Management System",
-  description: "This is the website to register, manage course for the American University in Bulgaria",
+  description: "This is the website to register, manage courses for the American University in Bulgaria",
 };
 
 export default function RootLayout({
