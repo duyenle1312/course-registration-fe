@@ -49,7 +49,6 @@ export type Courses = {
 };
 
 interface Props {
-  role: string;
   functionality: string;
 }
 
@@ -57,11 +56,12 @@ export function CourseList(props: Props) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [data, setCourses] = useState<any[]>([]);
+  const [teachers, setTeachers] = useState<any[]>([]);
 
-  async function enrollCourse(courseId: string, course_name: string) {
+  async function courseAction(courseId: string, course_name: string, action: string) {
     const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
     try {
-      const res = await fetch(`${API_url}/enroll/${courseId}`, {
+      const res = await fetch(`${API_url}/${action}/${courseId}`, {
         method: "POST",
         headers: {
           login_email: user.email,
@@ -69,11 +69,9 @@ export function CourseList(props: Props) {
         },
       });
       const data = await res.json();
-      // console.log(data);
-      // console.log(res.status);
       if (res.status === 200) {
         toast({
-          description: `Successfully enroll in ${course_name}`,
+          description: `Successfully ${action} in ${course_name}`,
         });
       } else {
         toast({
@@ -85,18 +83,15 @@ export function CourseList(props: Props) {
     }
   }
 
-  useEffect(() => {
+  const getAllCourses = () => {
     const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
     let teachers_data: any[] = [];
-
-    // Get all courses
     fetch(`${API_url}/courses`, {
       next: { revalidate: 1 }, // Revalidate every second
     })
       .then((res) => res.json())
       .then((data) => {
-        teachers_data = data["users"]
-        
+        teachers_data = data["users"];
         let courses: any[] = [];
         data["courses"].forEach((x: any, i: any) => {
           // Get teacher name from teacher_id provided by the course object
@@ -114,7 +109,57 @@ export function CourseList(props: Props) {
         setCourses(courses);
         setLoading(false);
       });
-  }, []);
+  };
+
+  const getStudentCourses = () => {
+    const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
+    let teachers_data: any;
+
+    fetch(`${API_url}/teachers`, {
+      next: { revalidate: 1 }, // Revalidate every second
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        teachers_data = data;
+        // Get enrolled courses from student
+        fetch(`${API_url}/account`, {
+          method: "GET",
+          headers: {
+            login_email: user.email,
+            login_password: user.password,
+          },
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            let courses: any[] = [];
+            data["courses"].forEach((x: any, i: any) => {
+              // Get teacher name from teacher_id provided by the course object
+              const teacher = teachers_data.filter(
+                (teacher: any) => teacher["id"] === x.teacher_id
+              );
+              courses.push({
+                id: x.id || "",
+                instructor: teacher[0]?.username,
+                code: x.course_nr || "",
+                name: x.course || "",
+                time: x.timeslots || "",
+              });
+            });
+            setCourses(courses);
+            setLoading(false);
+          });
+      });
+  };
+
+  useEffect(() => {
+    if (props.functionality === "Add Course") getAllCourses();
+    if (
+      props.functionality === "Drop Course" &&
+      user?.id !== 0 &&
+      user?.email != undefined
+    )
+      getStudentCourses();
+  }, [props, user]);
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -233,7 +278,8 @@ export function CourseList(props: Props) {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => {
-                      enrollCourse(course.id, course.name);
+                      if (props.functionality === "Add Course") courseAction(course.id, course.name, "enroll");
+                      if (props.functionality === "Drop Course") courseAction(course.id, course.name, "unenroll");
                     }}
                   >
                     {props.functionality}

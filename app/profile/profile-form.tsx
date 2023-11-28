@@ -56,7 +56,7 @@ export function ProfileForm() {
       })
         .then((res) => res.json())
         .then((data) => {
-          // console.log(data)
+          console.log(data)
           const current_user = { ...data["user"], password: user.password };
           form.reset(current_user);
           // console.log(current_user);

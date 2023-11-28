@@ -35,8 +35,6 @@ export default function CourseDetails(props: any) {
         },
       });
       const data = await res.json();
-      console.log(data);
-      console.log(res.status);
       if (res.status === 200) {
         toast({
           description: "Successfully enroll in this course",
@@ -62,8 +60,6 @@ export default function CourseDetails(props: any) {
         },
       });
       const data = await res.json();
-      // console.log(data);
-      // console.log(res.status);
       if (res.status === 200) {
         toast({
           title: data.message,
