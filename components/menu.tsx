@@ -30,7 +30,7 @@ const viewComponents: { title: string; href: string; description: string }[] = [
   {
     title: "All Teachers",
     href: "/teachers",
-    description: "Displays all teacher accounts",
+    description: "Assign teachers to a department",
   },
   {
     title: "All Departments",
@@ -53,7 +53,7 @@ const createComponents: { title: string; href: string; description: string }[] =
     },
     {
       title: "Create New Department",
-      href: "/create-dep",
+      href: "/create-department",
       description: "Create new department, only for admin",
     },
     {

@@ -51,23 +51,73 @@ export type Users = {
   role: string;
 };
 
-export function UserList() {
+export function UserList(props: any) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [data, setUsers] = useState([]);
+  const [departments, setDepartments] = useState<any[]>([]);
+
+  const getDepartments = () => {
+    const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
+    fetch(`${API_url}/departments`, {
+      method: "GET",
+      headers: {
+        login_email: user.email,
+        login_password: user.password,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setDepartments(data);
+      });
+  };
+
+  const assignToDepartment = async (department_id: any, teacher_id: any) => {
+    const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
+    try {
+      const res = await fetch(`${API_url}/admin/department/${department_id}`, {
+        method: "POST",
+        headers: {
+          login_email: user?.email,
+          login_password: user?.password,
+          teacher_id: teacher_id,
+        },
+      });
+      const data = await res.json();
+      console.log(data);
+      console.log(res.status);
+      if (res.status === 200) {
+        toast({
+          description: data.message,
+        });
+      } else {
+        toast({
+          description: data.error,
+        });
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   useEffect(() => {
+    getDepartments();
     const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
     fetch(`${API_url}/users`, {
       next: { revalidate: 1 }, // Revalidate every second
     })
       .then((res) => res.json())
       .then((data) => {
-        setUsers(data);
-        setLoading(false);
         // console.log(data);
+        if (props.is_teacher) {
+          const teachers = data.filter((i: any) => i.role === "teacher");
+          setUsers(teachers);
+        } else {
+          setUsers(data);
+        }
+        setLoading(false);
       });
-  }, []);
+  }, [props]);
 
   async function assignRole(target_id: number, role: string) {
     const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -176,29 +226,44 @@ export function UserList() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => {
-                  assignRole(user?.id, "admin");
-                }}
-              >
-                Assign as Admin
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  assignRole(user?.id, "teacher");
-                }}
-              >
-                Assign as Teacher
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  assignRole(user?.id, "student");
-                }}
-              >
-                Assign as Student
-              </DropdownMenuItem>
-              <DropdownMenuItem>Update</DropdownMenuItem>
-              <DropdownMenuItem>Delete</DropdownMenuItem>
+              {!props?.is_teacher && (
+                <>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      assignRole(user?.id, "admin");
+                    }}
+                  >
+                    Assign as Admin
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      assignRole(user?.id, "teacher");
+                    }}
+                  >
+                    Assign as Teacher
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      assignRole(user?.id, "student");
+                    }}
+                  >
+                    Assign as Student
+                  </DropdownMenuItem>
+                </>
+              )}
+              {props?.is_teacher &&
+                departments.map((department) => (
+                  <DropdownMenuItem
+                    key={department?.id}
+                    onClick={(e) => {
+                      assignToDepartment(department?.id, user?.id);
+                    }}
+                  >
+                    Assign to {department?.name}
+                  </DropdownMenuItem>
+                ))}
+              {/* <DropdownMenuItem>Update</DropdownMenuItem>
+              <DropdownMenuItem>Delete</DropdownMenuItem> */}
             </DropdownMenuContent>
           </DropdownMenu>
         );

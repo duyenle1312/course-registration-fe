@@ -43,10 +43,6 @@ export function ProfileForm() {
     if (user?.id !== 0 && user?.email != undefined) {
       // wait until user is loaded from local storage
       const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
-      console.log("call API", {
-        login_email: user.email,
-        login_password: user.password,
-      })
       fetch(`${API_url}/account`, {
         method: "GET",
         headers: {
@@ -56,10 +52,9 @@ export function ProfileForm() {
       })
         .then((res) => res.json())
         .then((data) => {
-          console.log(data)
+          // console.log(data)
           const current_user = { ...data["user"], password: user.password };
           form.reset(current_user);
-          // console.log(current_user);
         });
     }
   }, [user, form]);
