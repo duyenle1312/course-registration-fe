@@ -94,38 +94,26 @@ export default function CourseDetails(props: any) {
 
   useEffect(() => {
     const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
-    let teachers_data: any[] = [];
 
-    // Get all teachers
-    fetch(`${API_url}/teachers`, {
+    fetch(`${API_url}/courses/${courseId}`, {
       next: { revalidate: 1 }, // Revalidate every second
     })
       .then((res) => res.json())
       .then((data) => {
-        teachers_data = data;
-        // Get course details
-        fetch(`${API_url}/courses/${courseId}`, {
-          next: { revalidate: 1 }, // Revalidate every second
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            const teacher: any = teachers_data.filter(
-              (teacher) => teacher["id"] === data[0].teacher_id
-            );
-            const course = {
-              id: data[0].id,
-              teacher_id: data[0].teacher_id,
-              instructor: teacher[0]["username"],
-              instructor_email: teacher[0]["email"],
-              name: data[0].course,
-              code: data[0].course_nr,
-              description: data[0].description,
-              credits: data[0].cr_cost,
-              timeslots: data[0].timeslots,
-            };
-            setCourseDetails(course);
-            setLoading(false);
-          });
+        const course = {
+          id: data["course"].id,
+          teacher_id: data["course"].teacher_id,
+          instructor: data["user"]["username"],
+          instructor_email: data["user"]["email"],
+          name: data["course"].course,
+          code: data["course"].course_nr,
+          description: data["course"].description,
+          credits: data["course"].cr_cost,
+          timeslots: data["course"].timeslots,
+        };
+
+        setCourseDetails(course);
+        setLoading(false);
       });
   }, [courseId]);
 

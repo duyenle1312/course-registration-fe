@@ -89,37 +89,30 @@ export function CourseList(props: Props) {
     const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
     let teachers_data: any[] = [];
 
-    // Get all teachers
-    fetch(`${API_url}/teachers`, {
+    // Get all courses
+    fetch(`${API_url}/courses`, {
       next: { revalidate: 1 }, // Revalidate every second
     })
       .then((res) => res.json())
       .then((data) => {
-        teachers_data = data;
-
-        // Get all courses
-        fetch(`${API_url}/courses`, {
-          next: { revalidate: 1 }, // Revalidate every second
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            let courses: any[] = [];
-            data.forEach((x: any, i: any) => {
-              // Get teacher name from teacher_id provided by the course object
-              const teacher = teachers_data.filter(
-                (teacher) => teacher["id"] === x.teacher_id
-              );
-              courses.push({
-                id: x.id || "",
-                instructor: teacher[0]?.username,
-                code: x.course_nr || "",
-                name: x.course || "",
-                time: x.timeslots || "",
-              });
-            });
-            setCourses(courses);
-            setLoading(false);
+        teachers_data = data["users"]
+        
+        let courses: any[] = [];
+        data["courses"].forEach((x: any, i: any) => {
+          // Get teacher name from teacher_id provided by the course object
+          const teacher = teachers_data.filter(
+            (teacher) => teacher["id"] === x.teacher_id
+          );
+          courses.push({
+            id: x.id || "",
+            instructor: teacher[0]?.username,
+            code: x.course_nr || "",
+            name: x.course || "",
+            time: x.timeslots || "",
           });
+        });
+        setCourses(courses);
+        setLoading(false);
       });
   }, []);
 

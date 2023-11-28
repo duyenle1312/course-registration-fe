@@ -40,11 +40,15 @@ export function ProfileForm() {
   });
 
   useEffect(() => {
-    if (user?.id !== 0) {
+    if (user?.id !== 0 && user?.email != undefined) {
       // wait until user is loaded from local storage
       const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
+      console.log("call API", {
+        login_email: user.email,
+        login_password: user.password,
+      })
       fetch(`${API_url}/account`, {
-        method: "PATCH",
+        method: "GET",
         headers: {
           login_email: user.email,
           login_password: user.password,
@@ -52,7 +56,8 @@ export function ProfileForm() {
       })
         .then((res) => res.json())
         .then((data) => {
-          const current_user = { ...data, password: user.password };
+          // console.log(data)
+          const current_user = { ...data["user"], password: user.password };
           form.reset(current_user);
           // console.log(current_user);
         });
@@ -66,22 +71,23 @@ export function ProfileForm() {
       login_password: user.password,
       username: info?.username || "",
       email: info?.email || "",
-      // password: info?.password || "", // some issue with the backend related to pw
+      password: info?.password || "",
       phone: info?.phone || "",
     };
-    // console.log(payload)
+    console.log("submit", payload)
     try {
       const res = await fetch(`${API_url}/account`, {
         method: "PATCH",
         headers: payload,
       });
       const data = await res.json();
-      console.log(data);
+      // console.log(data);
       console.log(res.status);
       if (res.status === 200) {
-        setUser({ ...data, password: info.password });
+        localStorage.setItem("current_user", JSON.stringify({ ...user, password: info.password }));
+        setUser({ ...user, password: info.password })
         toast({
-          description: "Successfully update information",
+          description: data.message,
         });
       } else {
         toast({

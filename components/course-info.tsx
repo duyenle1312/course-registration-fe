@@ -58,8 +58,6 @@ interface CourseDetails {
   title: string;
   code: string;
   teacher_id: string;
-  // instructor: "",
-  // instructor_email: "",
   description: string;
   credit: string;
   time: string;
@@ -81,15 +79,12 @@ export function CourseInfo(props: Props) {
     title: "",
     code: "",
     teacher_id: "0",
-    // instructor: "",
-    // instructor_email: "",
     description: "",
     credit: "3",
     time: "",
   });
   useEffect(() => {
     const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
-    let teachers_data: any[] = [];
 
     fetch(`${API_url}/teachers`, {
       next: { revalidate: 1 }, // Revalidate every second
@@ -106,20 +101,14 @@ export function CourseInfo(props: Props) {
           })
             .then((res) => res.json())
             .then((data) => {
-              const teacher: any = teachers_data.filter(
-                (teacher) => teacher["id"] === data[0].teacher_id
-              );
-
               const course = {
-                id: data[0].id,
-                teacher_id: data[0].teacher_id.toString(),
-                // instructor: teacher[0]["username"],
-                // instructor_email: teacher[0]["email"],
-                title: data[0].course,
-                code: data[0].course_nr,
-                description: data[0].description,
-                credit: data[0].cr_cost.toString(),
-                time: data[0].timeslots,
+                id: data["course"].id,
+                teacher_id: data["course"].teacher_id.toString(),
+                title: data["course"].course,
+                code: data["course"].course_nr,
+                description: data["course"].description,
+                credit: data["course"].cr_cost.toString(),
+                time: data["course"].timeslots,
               };
               setCourseDetails(course);
               form.reset(course); // load initial values to form
@@ -150,7 +139,7 @@ export function CourseInfo(props: Props) {
       timeslots: info.time,
       cr_cost: info.credit.toString(),
     };
-    console.log(payload);
+    // console.log(payload);
     try {
       const res = await fetch(`${API_url}`, {
         method: props.functionality === "edit" ? `PATCH` : `POST`,
@@ -164,7 +153,8 @@ export function CourseInfo(props: Props) {
         toast({
           description: data.message,
         });
-        if (props.functionality === "edit") router.push(`/course/${props.courseId}`)
+        if (props.functionality === "edit")
+          router.push(`/course/${props.courseId}`);
       } else {
         toast({
           description: data.error,
@@ -310,7 +300,10 @@ export function CourseInfo(props: Props) {
                     <FormItem>
                       <FormLabel>Credits</FormLabel>
                       <FormControl>
-                        <Select onValueChange={field.onChange} defaultValue={courseDetails?.credit}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={courseDetails?.credit}
+                        >
                           <SelectTrigger
                             id="credit"
                             className="line-clamp-1 w-full truncate"
