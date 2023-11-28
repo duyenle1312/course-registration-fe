@@ -4,6 +4,8 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import useAuth from "@/lib/useAuth";
+import { Menu } from "./menu";
+import { UserNav } from "./user-nav";
 
 export function MainNav({
   className,
@@ -13,48 +15,15 @@ export function MainNav({
   const { user } = useAuth();
 
   return (
-    <nav
-      className={cn("flex items-center space-x-5 lg:space-x-8", className)}
-      {...props}
-    >
-      <Link
-        href="/"
-        className={`text-sm text-gray-800 transition-colors hover:text-primary ${
-          pathname == "/" ? "font-semibold" : ""
-        }`}
-      >
-        AUBG Courses
-      </Link>
-      {user?.role === "student" && (
-        <Link
-          href="/courses"
-          className={`text-sm text-gray-800 transition-colors hover:text-primary ${
-            pathname == "/courses" ? "font-semibold" : ""
-          }`}
-        >
-          Registered Course
-        </Link>
-      )}
-      {user?.role === "admin" && (
-        <Link
-          href="/users"
-          className={`text-sm text-gray-800 transition-colors hover:text-primary ${
-            pathname == "/users" ? "font-semibold" : ""
-          }`}
-        >
-          All Users
-        </Link>
-      )}
-      {(user?.role === "admin" || user?.role === "teacher") && (
-        <Link
-          href="/create-course"
-          className={`text-sm text-gray-800 transition-colors hover:text-primary ${
-            pathname == "/create-course" ? "font-semibold" : ""
-          }`}
-        >
-          Create New Course
-        </Link>
-      )}
-    </nav>
+    <>
+      <div className="z-50 flex py-3 px-8 w-full fixed bg-white rounded drop-shadow-sm">
+        <div className="flex w-full justify-center items-center">
+          <Menu />
+        </div>
+        <div className="ml-auto flex items-center space-x-4">
+          <UserNav />
+        </div>
+      </div>
+    </>
   );
 }

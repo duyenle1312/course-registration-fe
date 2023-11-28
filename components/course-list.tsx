@@ -58,7 +58,11 @@ export function CourseList(props: Props) {
   const [data, setCourses] = useState<any[]>([]);
   const [teachers, setTeachers] = useState<any[]>([]);
 
-  async function courseAction(courseId: string, course_name: string, action: string) {
+  async function courseAction(
+    courseId: string,
+    course_name: string,
+    action: string
+  ) {
     const API_url = process.env.NEXT_PUBLIC_BACKEND_URL;
     try {
       const res = await fetch(`${API_url}/${action}/${courseId}`, {
@@ -73,6 +77,7 @@ export function CourseList(props: Props) {
         toast({
           description: `Successfully ${action} in ${course_name}`,
         });
+        if (props.functionality === "Drop Course") window.location.reload(); // reload to fetch new data again
       } else {
         toast({
           description: data.error,
@@ -273,13 +278,15 @@ export function CourseList(props: Props) {
               >
                 Copy Course ID
               </DropdownMenuItem>
-              {user?.id !== 0 && user?.role !== "admin" && (
+              {user?.id !== 0 && user?.role === "student" && (
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => {
-                      if (props.functionality === "Add Course") courseAction(course.id, course.name, "enroll");
-                      if (props.functionality === "Drop Course") courseAction(course.id, course.name, "unenroll");
+                      if (props.functionality === "Add Course")
+                        courseAction(course.id, course.name, "enroll");
+                      if (props.functionality === "Drop Course")
+                        courseAction(course.id, course.name, "unenroll");
                     }}
                   >
                     {props.functionality}
@@ -368,7 +375,7 @@ export function CourseList(props: Props) {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <div className="rounded-md border">
+      <div>
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

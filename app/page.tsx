@@ -5,12 +5,7 @@ import { UserNav } from "@/components/user-nav";
 export default async function Home() {
   return (
     <>
-      <div className="flex p-5 w-full fixed bg-white bg-opacity-30 backdrop-blur-lg rounded drop-shadow-md">
-        <MainNav className="" />
-        <div className="ml-auto flex items-center space-x-4">
-          <UserNav />
-        </div>
-      </div>
+      <MainNav />
       <div className="flex min-h-screen flex-col items-center justify-center lg:p-32 md:p-20 p-5">
         <CourseList functionality="Add Course" />
       </div>
