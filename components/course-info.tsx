@@ -180,7 +180,7 @@ export function CourseInfo(props: Props) {
           <CardHeader>
             <CardTitle>{props.title}</CardTitle>
             <CardDescription>
-              Only Admin can make changes on this page
+              Only Admin and Teachers can make changes on this page
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-6">
